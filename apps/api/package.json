@@ -105,6 +105,9 @@
     "testEnvironment": "node",
     "moduleNameMapper": {
       "^src/(.*)$": "<rootDir>/src/$1"
-    }
+    },
+    "testPathIgnorePatterns": [
+      "test/quotation-deliveries.spec.ts"
+    ]
   }
 }

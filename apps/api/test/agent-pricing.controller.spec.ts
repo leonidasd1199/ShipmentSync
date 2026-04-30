@@ -187,6 +187,7 @@ describe("AgentPricingController", () => {
       expect(service.getPricelist).toHaveBeenCalledWith(
         mockAgentId,
         mockSupplierId,
+        expect.any(Object),
       );
     });
 
