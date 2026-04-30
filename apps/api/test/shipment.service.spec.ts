@@ -315,7 +315,9 @@ describe("ShipmentService", () => {
   describe("findOne()", () => {
     it("should return the shipment when found", async () => {
       mockShipmentModel.findById.mockReturnValue({
-        exec: jest.fn().mockResolvedValue(mockShipment),
+        populate: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue(mockShipment),
+        }),
       });
 
       const result = await service.findOne(mockShipmentId);
@@ -326,7 +328,9 @@ describe("ShipmentService", () => {
 
     it("should throw NotFoundException when shipment does not exist", async () => {
       mockShipmentModel.findById.mockReturnValue({
-        exec: jest.fn().mockResolvedValue(null),
+        populate: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue(null),
+        }),
       });
 
       await expect(service.findOne(mockShipmentId)).rejects.toThrow(
@@ -347,7 +351,9 @@ describe("ShipmentService", () => {
     beforeEach(() => {
       // findOne internally used by update()
       mockShipmentModel.findById.mockReturnValue({
-        exec: jest.fn().mockResolvedValue(mockShipment),
+        populate: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue(mockShipment),
+        }),
       });
       mockUserModel.findById.mockReturnValue({
         select: jest.fn().mockReturnValue({
@@ -381,7 +387,9 @@ describe("ShipmentService", () => {
         status: ShipmentStatus.READY_FOR_FINANCE,
       };
       mockShipmentModel.findById.mockReturnValue({
-        exec: jest.fn().mockResolvedValue(lockedShipment),
+        populate: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue(lockedShipment),
+        }),
       });
 
       await expect(
@@ -409,7 +417,9 @@ describe("ShipmentService", () => {
         shippingLineId: new Types.ObjectId(oldSupplierId),
       };
       mockShipmentModel.findById.mockReturnValue({
-        exec: jest.fn().mockResolvedValue(shipmentWithSupplier),
+        populate: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue(shipmentWithSupplier),
+        }),
       });
       mockShipmentModel.findByIdAndUpdate.mockReturnValue({
         exec: jest.fn().mockResolvedValue({
@@ -566,7 +576,9 @@ describe("ShipmentService", () => {
   describe("financeReview()", () => {
     it("should throw BadRequestException if status is not READY_FOR_FINANCE", async () => {
       mockShipmentModel.findById.mockReturnValue({
-        exec: jest.fn().mockResolvedValue({ ...mockShipment, status: ShipmentStatus.DRAFT }),
+        populate: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue({ ...mockShipment, status: ShipmentStatus.DRAFT }),
+        }),
       });
 
       await expect(
@@ -576,9 +588,11 @@ describe("ShipmentService", () => {
 
     it("should transition to FINANCE_REVIEW when status is READY_FOR_FINANCE", async () => {
       mockShipmentModel.findById.mockReturnValue({
-        exec: jest.fn().mockResolvedValue({
-          ...mockShipment,
-          status: ShipmentStatus.READY_FOR_FINANCE,
+        populate: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue({
+            ...mockShipment,
+            status: ShipmentStatus.READY_FOR_FINANCE,
+          }),
         }),
       });
       mockShipmentModel.findByIdAndUpdate.mockReturnValue({
@@ -597,7 +611,9 @@ describe("ShipmentService", () => {
   describe("approve()", () => {
     it("should throw BadRequestException if status is not FINANCE_REVIEW", async () => {
       mockShipmentModel.findById.mockReturnValue({
-        exec: jest.fn().mockResolvedValue({ ...mockShipment, status: ShipmentStatus.DRAFT }),
+        populate: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue({ ...mockShipment, status: ShipmentStatus.DRAFT }),
+        }),
       });
 
       await expect(service.approve(mockShipmentId, mockUserId)).rejects.toThrow(
@@ -607,9 +623,11 @@ describe("ShipmentService", () => {
 
     it("should transition to APPROVED when status is FINANCE_REVIEW", async () => {
       mockShipmentModel.findById.mockReturnValue({
-        exec: jest.fn().mockResolvedValue({
-          ...mockShipment,
-          status: ShipmentStatus.FINANCE_REVIEW,
+        populate: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue({
+            ...mockShipment,
+            status: ShipmentStatus.FINANCE_REVIEW,
+          }),
         }),
       });
       mockShipmentModel.findByIdAndUpdate.mockReturnValue({
@@ -626,9 +644,12 @@ describe("ShipmentService", () => {
 
     it("should persist optional note on approve", async () => {
       mockShipmentModel.findById.mockReturnValue({
-        exec: jest.fn().mockResolvedValue({
-          ...mockShipment,
-          status: ShipmentStatus.FINANCE_REVIEW,
+        populate: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue({
+            ...mockShipment,
+            status: ShipmentStatus.FINANCE_REVIEW,
+            financeLastNote: "Looks good",
+          }),
         }),
       });
       mockShipmentModel.findByIdAndUpdate.mockReturnValue({
@@ -654,7 +675,9 @@ describe("ShipmentService", () => {
   describe("rejectFinanceReview()", () => {
     it("should throw BadRequestException if status is not FINANCE_REVIEW", async () => {
       mockShipmentModel.findById.mockReturnValue({
-        exec: jest.fn().mockResolvedValue({ ...mockShipment, status: ShipmentStatus.DRAFT }),
+        populate: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue({ ...mockShipment, status: ShipmentStatus.DRAFT }),
+        }),
       });
 
       await expect(
@@ -664,9 +687,11 @@ describe("ShipmentService", () => {
 
     it("should throw BadRequestException if note is empty", async () => {
       mockShipmentModel.findById.mockReturnValue({
-        exec: jest.fn().mockResolvedValue({
-          ...mockShipment,
-          status: ShipmentStatus.FINANCE_REVIEW,
+        populate: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue({
+            ...mockShipment,
+            status: ShipmentStatus.FINANCE_REVIEW,
+          }),
         }),
       });
 
@@ -677,9 +702,11 @@ describe("ShipmentService", () => {
 
     it("should transition to DRAFT with note when status is FINANCE_REVIEW", async () => {
       mockShipmentModel.findById.mockReturnValue({
-        exec: jest.fn().mockResolvedValue({
-          ...mockShipment,
-          status: ShipmentStatus.FINANCE_REVIEW,
+        populate: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue({
+            ...mockShipment,
+            status: ShipmentStatus.FINANCE_REVIEW,
+          }),
         }),
       });
       mockShipmentModel.findByIdAndUpdate.mockReturnValue({
@@ -703,7 +730,9 @@ describe("ShipmentService", () => {
   describe("close()", () => {
     it("should throw BadRequestException if status is not APPROVED", async () => {
       mockShipmentModel.findById.mockReturnValue({
-        exec: jest.fn().mockResolvedValue({ ...mockShipment, status: ShipmentStatus.DRAFT }),
+        populate: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue({ ...mockShipment, status: ShipmentStatus.DRAFT }),
+        }),
       });
 
       await expect(service.close(mockShipmentId, mockUserId)).rejects.toThrow(
@@ -713,9 +742,11 @@ describe("ShipmentService", () => {
 
     it("should transition to CLOSED when status is APPROVED", async () => {
       mockShipmentModel.findById.mockReturnValue({
-        exec: jest.fn().mockResolvedValue({
-          ...mockShipment,
-          status: ShipmentStatus.APPROVED,
+        populate: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue({
+            ...mockShipment,
+            status: ShipmentStatus.APPROVED,
+          }),
         }),
       });
       mockShipmentModel.findByIdAndUpdate.mockReturnValue({

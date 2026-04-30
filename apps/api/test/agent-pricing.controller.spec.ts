@@ -1,6 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { AgentPricingController } from "../src/pricing/agent-pricing.controller";
 import { AgentPricingService } from "../src/pricing/agent-pricing.service";
+import { PortsService } from "../src/ports/ports.service";
 import { UpsertPricelistDto } from "../src/agents/dto/upsert-pricelist.dto";
 import { MaritimeIncoterm, Currency } from "../src/common/enums/maritime-incoterms.enum";
 
@@ -67,6 +68,10 @@ describe("AgentPricingController", () => {
         {
           provide: AgentPricingService,
           useValue: mockAgentPricingService,
+        },
+        {
+          provide: PortsService,
+          useValue: { findAll: jest.fn() },
         },
       ],
     }).compile();

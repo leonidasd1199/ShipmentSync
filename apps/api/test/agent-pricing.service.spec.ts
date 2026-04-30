@@ -12,6 +12,7 @@ import { Shipping, ShippingDocument } from "../src/schemas/shipping.schema";
 import {
   AgentPricelist,
   AgentPricelistDocument,
+  PricelistStatus,
 } from "../src/schemas/agent-pricelist.schema";
 import { HistoryService } from "../src/history/history.service";
 import { UpsertPricelistDto } from "../src/agents/dto/upsert-pricelist.dto";
@@ -24,7 +25,6 @@ describe("AgentPricingService", () => {
   let shippingModel: Model<ShippingDocument>;
   let historyService: HistoryService;
 
-  // Mock data
   const mockAgentId = new Types.ObjectId();
   const mockSupplierId = new Types.ObjectId();
   const mockItemId = new Types.ObjectId();
@@ -70,19 +70,20 @@ describe("AgentPricingService", () => {
     agentId: mockAgentId,
     supplierId: mockSupplierId,
     items: [mockPricelistItem],
+    status: PricelistStatus.DRAFT,
     createdAt: new Date(),
     updatedAt: new Date(),
     save: jest.fn(),
     toObject: jest.fn(),
   } as unknown as AgentPricelistDocument;
 
-  // Mock model methods
   const mockPricelistModel = {
     findOne: jest.fn(),
     find: jest.fn(),
     findOneAndUpdate: jest.fn(),
     findByIdAndUpdate: jest.fn(),
     countDocuments: jest.fn(),
+    create: jest.fn(),
   };
 
   const mockAgentModel = {
@@ -147,14 +148,16 @@ describe("AgentPricingService", () => {
         { supplierId: mockSupplierId },
       ];
 
-      mockAgentModel.findById.mockResolvedValue(mockAgent);
-      mockShippingModel.countDocuments.mockResolvedValue(1);
+      mockAgentModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockAgent) });
+      mockShippingModel.countDocuments.mockReturnValue({ exec: jest.fn().mockResolvedValue(1) });
       mockShippingModel.find.mockReturnValue({
         select: jest.fn().mockReturnValue({
           skip: jest.fn().mockReturnValue({
             limit: jest.fn().mockReturnValue({
               sort: jest.fn().mockReturnValue({
-                lean: jest.fn().mockResolvedValue(mockSuppliers),
+                lean: jest.fn().mockReturnValue({
+                  exec: jest.fn().mockResolvedValue(mockSuppliers),
+                }),
               }),
             }),
           }),
@@ -162,7 +165,9 @@ describe("AgentPricingService", () => {
       });
       mockPricelistModel.find.mockReturnValue({
         select: jest.fn().mockReturnValue({
-          lean: jest.fn().mockResolvedValue(mockPricelists),
+          lean: jest.fn().mockReturnValue({
+            exec: jest.fn().mockResolvedValue(mockPricelists),
+          }),
         }),
       });
 
@@ -193,7 +198,7 @@ describe("AgentPricingService", () => {
     });
 
     it("should throw NotFoundException when agent does not exist", async () => {
-      mockAgentModel.findById.mockResolvedValue(null);
+      mockAgentModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(null) });
 
       await expect(
         service.listAgentSuppliers(mockAgentId.toString(), {}),
@@ -202,7 +207,7 @@ describe("AgentPricingService", () => {
 
     it("should throw BadRequestException when agent is not active", async () => {
       const inactiveAgent = { ...mockAgent, isActive: false };
-      mockAgentModel.findById.mockResolvedValue(inactiveAgent);
+      mockAgentModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(inactiveAgent) });
 
       await expect(
         service.listAgentSuppliers(mockAgentId.toString(), {}),
@@ -215,14 +220,16 @@ describe("AgentPricingService", () => {
         { _id: mockSupplierId, name: "Test Shipping", isActive: true },
       ];
 
-      mockAgentModel.findById.mockResolvedValue(mockAgent);
-      mockShippingModel.countDocuments.mockResolvedValue(1);
+      mockAgentModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockAgent) });
+      mockShippingModel.countDocuments.mockReturnValue({ exec: jest.fn().mockResolvedValue(1) });
       mockShippingModel.find.mockReturnValue({
         select: jest.fn().mockReturnValue({
           skip: jest.fn().mockReturnValue({
             limit: jest.fn().mockReturnValue({
               sort: jest.fn().mockReturnValue({
-                lean: jest.fn().mockResolvedValue(mockSuppliers),
+                lean: jest.fn().mockReturnValue({
+                  exec: jest.fn().mockResolvedValue(mockSuppliers),
+                }),
               }),
             }),
           }),
@@ -230,7 +237,9 @@ describe("AgentPricingService", () => {
       });
       mockPricelistModel.find.mockReturnValue({
         select: jest.fn().mockReturnValue({
-          lean: jest.fn().mockResolvedValue([]),
+          lean: jest.fn().mockReturnValue({
+            exec: jest.fn().mockResolvedValue([]),
+          }),
         }),
       });
 
@@ -253,14 +262,16 @@ describe("AgentPricingService", () => {
         { _id: mockSupplierId, name: "Test Shipping", isActive: true },
       ];
 
-      mockAgentModel.findById.mockResolvedValue(agentWithShippingLine);
-      mockShippingModel.countDocuments.mockResolvedValue(1);
+      mockAgentModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(agentWithShippingLine) });
+      mockShippingModel.countDocuments.mockReturnValue({ exec: jest.fn().mockResolvedValue(1) });
       mockShippingModel.find.mockReturnValue({
         select: jest.fn().mockReturnValue({
           skip: jest.fn().mockReturnValue({
             limit: jest.fn().mockReturnValue({
               sort: jest.fn().mockReturnValue({
-                lean: jest.fn().mockResolvedValue(mockSuppliers),
+                lean: jest.fn().mockReturnValue({
+                  exec: jest.fn().mockResolvedValue(mockSuppliers),
+                }),
               }),
             }),
           }),
@@ -268,7 +279,9 @@ describe("AgentPricingService", () => {
       });
       mockPricelistModel.find.mockReturnValue({
         select: jest.fn().mockReturnValue({
-          lean: jest.fn().mockResolvedValue([]),
+          lean: jest.fn().mockReturnValue({
+            exec: jest.fn().mockResolvedValue([]),
+          }),
         }),
       });
 
@@ -287,48 +300,43 @@ describe("AgentPricingService", () => {
 
   describe("getPricelist", () => {
     it("should return pricelist with items", async () => {
-      mockAgentModel.findById.mockResolvedValue(mockAgent);
-      mockShippingModel.findById.mockResolvedValue(mockSupplier);
-      mockPricelistModel.findOne.mockResolvedValue(mockPricelist);
+      mockAgentModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockAgent) });
+      mockShippingModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockSupplier) });
+      mockPricelistModel.findOne.mockReturnValue({
+        sort: jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue(mockPricelist) }),
+      });
 
       const result = await service.getPricelist(
         mockAgentId.toString(),
         mockSupplierId.toString(),
       );
 
-      expect(result).toEqual({
-        supplierId: mockSupplierId.toString(),
-        items: [
-          {
-            id: mockItemId.toString(),
-            name: "40FT Container Transport",
-            incoterm: MaritimeIncoterm.FOB,
-            cost: 1250.0,
-            currency: Currency.USD,
-            metadata: { notes: "Test item" },
-          },
-        ],
-      });
+      expect(result.supplierId).toBe(mockSupplierId.toString());
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0]).toEqual(expect.objectContaining({
+        id: mockItemId.toString(),
+        name: "40FT Container Transport",
+        incoterm: MaritimeIncoterm.FOB,
+        cost: 1250.0,
+        currency: Currency.USD,
+        metadata: { notes: "Test item" },
+      }));
       expect(mockPricelistModel.findOne).toHaveBeenCalledWith({
         agentId: mockAgentId,
         supplierId: mockSupplierId,
       });
     });
 
-    it("should return empty items array when pricelist does not exist", async () => {
-      mockAgentModel.findById.mockResolvedValue(mockAgent);
-      mockShippingModel.findById.mockResolvedValue(mockSupplier);
-      mockPricelistModel.findOne.mockResolvedValue(null);
-
-      const result = await service.getPricelist(
-        mockAgentId.toString(),
-        mockSupplierId.toString(),
-      );
-
-      expect(result).toEqual({
-        supplierId: mockSupplierId.toString(),
-        items: [],
+    it("should throw NotFoundException when pricelist does not exist", async () => {
+      mockAgentModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockAgent) });
+      mockShippingModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockSupplier) });
+      mockPricelistModel.findOne.mockReturnValue({
+        sort: jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue(null) }),
       });
+
+      await expect(
+        service.getPricelist(mockAgentId.toString(), mockSupplierId.toString()),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it("should throw BadRequestException for invalid agentId format", async () => {
@@ -344,7 +352,7 @@ describe("AgentPricingService", () => {
     });
 
     it("should throw NotFoundException when agent does not exist", async () => {
-      mockAgentModel.findById.mockResolvedValue(null);
+      mockAgentModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(null) });
 
       await expect(
         service.getPricelist(
@@ -355,8 +363,8 @@ describe("AgentPricingService", () => {
     });
 
     it("should throw NotFoundException when supplier does not exist", async () => {
-      mockAgentModel.findById.mockResolvedValue(mockAgent);
-      mockShippingModel.findById.mockResolvedValue(null);
+      mockAgentModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockAgent) });
+      mockShippingModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(null) });
 
       await expect(
         service.getPricelist(
@@ -376,8 +384,8 @@ describe("AgentPricingService", () => {
         shippingLineId: null,
       };
 
-      mockAgentModel.findById.mockResolvedValue(unassociatedAgent);
-      mockShippingModel.findById.mockResolvedValue(unassociatedSupplier);
+      mockAgentModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(unassociatedAgent) });
+      mockShippingModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(unassociatedSupplier) });
 
       await expect(
         service.getPricelist(
@@ -396,10 +404,13 @@ describe("AgentPricingService", () => {
         ...mockSupplier,
         agents: [],
       };
+      const emptyPricelist = { ...mockPricelist, items: [] };
 
-      mockAgentModel.findById.mockResolvedValue(agentWithShippingLine);
-      mockShippingModel.findById.mockResolvedValue(supplierWithoutAgent);
-      mockPricelistModel.findOne.mockResolvedValue(null);
+      mockAgentModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(agentWithShippingLine) });
+      mockShippingModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(supplierWithoutAgent) });
+      mockPricelistModel.findOne.mockReturnValue({
+        sort: jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue(emptyPricelist) }),
+      });
 
       const result = await service.getPricelist(
         mockAgentId.toString(),
@@ -427,13 +438,15 @@ describe("AgentPricingService", () => {
     it("should create a new pricelist", async () => {
       const newPricelist = {
         ...mockPricelist,
+        status: PricelistStatus.DRAFT,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
-      mockAgentModel.findById.mockResolvedValue(mockAgent);
-      mockShippingModel.findById.mockResolvedValue(mockSupplier);
-      mockPricelistModel.findOneAndUpdate.mockResolvedValue(newPricelist);
+      mockAgentModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockAgent) });
+      mockShippingModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockSupplier) });
+      mockPricelistModel.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue(null) });
+      mockPricelistModel.create.mockResolvedValue(newPricelist);
       mockHistoryService.log.mockResolvedValue({});
 
       const result = await service.upsertPricelist(
@@ -447,42 +460,38 @@ describe("AgentPricingService", () => {
       expect(result).toBeDefined();
       expect(result.supplierId).toBe(mockSupplierId.toString());
       expect(result.items).toHaveLength(1);
-      expect(mockPricelistModel.findOneAndUpdate).toHaveBeenCalledWith(
-        {
+      expect(mockPricelistModel.create).toHaveBeenCalledWith(
+        expect.objectContaining({
           agentId: mockAgentId,
           supplierId: mockSupplierId,
-        },
-        {
-          $set: {
-            items: expect.arrayContaining([
-              expect.objectContaining({
-                name: "40FT Container Transport",
-                incoterm: MaritimeIncoterm.FOB,
-                cost: 1250.0,
-                currency: Currency.USD,
-              }),
-            ]),
-          },
-        },
-        {
-          upsert: true,
-          new: true,
-          setDefaultsOnInsert: true,
-        },
+          items: expect.arrayContaining([
+            expect.objectContaining({
+              name: "40FT Container Transport",
+              incoterm: MaritimeIncoterm.FOB,
+              cost: 1250.0,
+              currency: Currency.USD,
+            }),
+          ]),
+        }),
       );
       expect(mockHistoryService.log).toHaveBeenCalled();
     });
 
-    it("should update an existing pricelist", async () => {
-      const updatedPricelist = {
+    it("should update an existing draft pricelist", async () => {
+      const existingDraft = {
         ...mockPricelist,
-        createdAt: new Date("2024-01-01"),
-        updatedAt: new Date("2024-01-02"),
+        _id: new Types.ObjectId(),
+        status: PricelistStatus.DRAFT,
+      };
+      const updatedPricelist = {
+        ...existingDraft,
+        items: mockPricelist.items,
       };
 
-      mockAgentModel.findById.mockResolvedValue(mockAgent);
-      mockShippingModel.findById.mockResolvedValue(mockSupplier);
-      mockPricelistModel.findOneAndUpdate.mockResolvedValue(updatedPricelist);
+      mockAgentModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockAgent) });
+      mockShippingModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockSupplier) });
+      mockPricelistModel.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue(existingDraft) });
+      mockPricelistModel.findByIdAndUpdate.mockReturnValue({ exec: jest.fn().mockResolvedValue(updatedPricelist) });
       mockHistoryService.log.mockResolvedValue({});
 
       await service.upsertPricelist(
@@ -504,8 +513,8 @@ describe("AgentPricingService", () => {
     it("should throw BadRequestException when items array is empty", async () => {
       const emptyDto: UpsertPricelistDto = { items: [] };
 
-      mockAgentModel.findById.mockResolvedValue(mockAgent);
-      mockShippingModel.findById.mockResolvedValue(mockSupplier);
+      mockAgentModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockAgent) });
+      mockShippingModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockSupplier) });
 
       await expect(
         service.upsertPricelist(
@@ -528,8 +537,8 @@ describe("AgentPricingService", () => {
         shippingLineId: null,
       };
 
-      mockAgentModel.findById.mockResolvedValue(unassociatedAgent);
-      mockShippingModel.findById.mockResolvedValue(unassociatedSupplier);
+      mockAgentModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(unassociatedAgent) });
+      mockShippingModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(unassociatedSupplier) });
 
       await expect(
         service.upsertPricelist(
@@ -574,10 +583,10 @@ describe("AgentPricingService", () => {
         items: [],
       };
 
-      mockAgentModel.findById.mockResolvedValue(mockAgent);
-      mockShippingModel.findById.mockResolvedValue(mockSupplier);
-      mockPricelistModel.findOne.mockResolvedValue(mockPricelist);
-      mockPricelistModel.findByIdAndUpdate.mockResolvedValue(updatedPricelist);
+      mockAgentModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockAgent) });
+      mockShippingModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockSupplier) });
+      mockPricelistModel.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockPricelist) });
+      mockPricelistModel.findByIdAndUpdate.mockReturnValue({ exec: jest.fn().mockResolvedValue(updatedPricelist) });
       mockHistoryService.log.mockResolvedValue({});
 
       const result = await service.deleteItem(
@@ -601,9 +610,9 @@ describe("AgentPricingService", () => {
     });
 
     it("should throw NotFoundException when pricelist does not exist", async () => {
-      mockAgentModel.findById.mockResolvedValue(mockAgent);
-      mockShippingModel.findById.mockResolvedValue(mockSupplier);
-      mockPricelistModel.findOne.mockResolvedValue(null);
+      mockAgentModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockAgent) });
+      mockShippingModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockSupplier) });
+      mockPricelistModel.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue(null) });
 
       await expect(
         service.deleteItem(
@@ -622,9 +631,9 @@ describe("AgentPricingService", () => {
         items: [],
       };
 
-      mockAgentModel.findById.mockResolvedValue(mockAgent);
-      mockShippingModel.findById.mockResolvedValue(mockSupplier);
-      mockPricelistModel.findOne.mockResolvedValue(pricelistWithoutItem);
+      mockAgentModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockAgent) });
+      mockShippingModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockSupplier) });
+      mockPricelistModel.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue(pricelistWithoutItem) });
 
       await expect(
         service.deleteItem(
@@ -638,9 +647,9 @@ describe("AgentPricingService", () => {
     });
 
     it("should throw BadRequestException for invalid itemId format", async () => {
-      mockAgentModel.findById.mockResolvedValue(mockAgent);
-      mockShippingModel.findById.mockResolvedValue(mockSupplier);
-      mockPricelistModel.findOne.mockResolvedValue(mockPricelist);
+      mockAgentModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockAgent) });
+      mockShippingModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockSupplier) });
+      mockPricelistModel.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockPricelist) });
 
       await expect(
         service.deleteItem(
@@ -663,8 +672,8 @@ describe("AgentPricingService", () => {
         shippingLineId: null,
       };
 
-      mockAgentModel.findById.mockResolvedValue(unassociatedAgent);
-      mockShippingModel.findById.mockResolvedValue(unassociatedSupplier);
+      mockAgentModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(unassociatedAgent) });
+      mockShippingModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(unassociatedSupplier) });
 
       await expect(
         service.deleteItem(
@@ -678,10 +687,10 @@ describe("AgentPricingService", () => {
     });
 
     it("should throw NotFoundException when pricelist is not found after update", async () => {
-      mockAgentModel.findById.mockResolvedValue(mockAgent);
-      mockShippingModel.findById.mockResolvedValue(mockSupplier);
-      mockPricelistModel.findOne.mockResolvedValue(mockPricelist);
-      mockPricelistModel.findByIdAndUpdate.mockResolvedValue(null);
+      mockAgentModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockAgent) });
+      mockShippingModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockSupplier) });
+      mockPricelistModel.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockPricelist) });
+      mockPricelistModel.findByIdAndUpdate.mockReturnValue({ exec: jest.fn().mockResolvedValue(null) });
 
       await expect(
         service.deleteItem(
