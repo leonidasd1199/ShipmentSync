@@ -1,0 +1,11 @@
+.office-screen .p-datatable .p-datatable-tbody > tr:nth-child(odd) > td {
+    background: #ffffff;
+  }
+  .office-screen .p-datatable .p-datatable-tbody > tr:nth-child(even) > td {
+    background: #f8fafc; 
+  }
+  
+  .office-screen .p-datatable .p-datatable-tbody > tr:hover > td {
+    background: #f3f4f6; /* neutral-100-ish */
+  }
+  

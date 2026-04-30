@@ -1,0 +1,55 @@
+/* === Checkbox de la columna (modal) === */
+.assign-users-modal .p-checkbox {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Cuadro base */
+  .assign-users-modal .p-checkbox .p-checkbox-box {
+    width: 1.1rem;
+    height: 1.1rem;
+    border-radius: 0.375rem;          /* rounded-md */
+    border: 1px solid #d1d5db;        /* neutral-300 */
+    background: #fff;                 /* fondo blanco cuando NO está seleccionado */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: none;
+  }
+  
+  /* Hover */
+  .assign-users-modal .p-checkbox:not(.p-disabled) .p-checkbox-box:hover {
+    border-color: #9ca3af;            /* neutral-400 */
+  }
+  
+  /* Seleccionado: pinta fondo oscuro y borde */
+  .assign-users-modal .p-checkbox.p-highlight .p-checkbox-box {
+    background: #111827;              /* neutral-900 */
+    border-color: #111827;
+  }
+  
+  /* Asegura que el ícono ✓ sea visible, blanco y centrado */
+  .assign-users-modal .p-checkbox .p-checkbox-box .p-checkbox-icon {
+    display: inline-block !important;
+    color: #fff !important;
+    font-size: 0.8rem !important;
+    line-height: 1 !important;
+  }
+  
+  /* — Fallback — si por tema el icono no aparece, pinta un check con ::after */
+  .assign-users-modal .p-checkbox.p-highlight .p-checkbox-box::after {
+    content: "✓";
+    position: relative;
+    display: inline-block;
+    font-weight: 700;
+    color: #fff;
+    font-size: 0.75rem;
+    line-height: 1;
+  }
+  /* pero si el icono propio existe, oculta el fallback para no duplicar */
+  .assign-users-modal .p-checkbox.p-highlight .p-checkbox-box .p-checkbox-icon {
+    /* quita el fallback si el icono de prime está presente */
+    /* (no hace falta nada más, el icono cubre el ::after) */
+  }
+  

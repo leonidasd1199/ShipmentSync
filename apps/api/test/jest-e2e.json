@@ -1,0 +1,19 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": "..",
+  "testMatch": ["**/*.e2e-spec.ts"],
+  "testEnvironment": "node",
+  "transform": {
+    "^.+\\.(t|j)s$": [
+      "ts-jest",
+      {
+        "tsconfig": "<rootDir>/test/tsconfig.json"
+      }
+    ]
+  },
+  "moduleNameMapper": {
+    "^src/(.*)$": "<rootDir>/src/$1",
+    "^@nestjs/schedule$": "<rootDir>/test/__mocks__/nestjs-schedule.ts"
+  },
+  "modulePaths": ["<rootDir>/node_modules"]
+}

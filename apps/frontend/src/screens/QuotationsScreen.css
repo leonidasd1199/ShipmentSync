@@ -1,0 +1,54 @@
+.quotation-datepicker .p-inputtext,
+.quotation-datepicker .p-datepicker-trigger {
+    background-color: #ffffff;
+    border: 1px solid #d4d4d8;
+    color: #000000 !important;
+    border-radius: 0.5rem;
+    height: 36px;
+    padding: 0 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    box-sizing: border-box;
+}
+
+.quotation-datepicker .p-inputwrapper,
+.quotation-datepicker .p-calendar-w-btn {
+    background-color: #ffffff !important;
+    border-radius: 0.5rem !important;
+}
+
+.quotation-datepicker .p-datepicker-trigger {
+    background-color: #ffffff !important;
+    border: 1px solid #d4d4d8 !important;
+    border-left: 0 !important;
+    color: #000000 !important;
+    border-radius: 0 0.5rem 0.5rem 0 !important;
+}
+
+.quotation-datepicker .p-datepicker-trigger:hover {
+    background-color: #f9fafb !important;
+}
+
+.p-datepicker-prev,
+.p-datepicker-next,
+.p-link,
+.p-datepicker-calendar {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    font-size: 14px;
+}
+
+.quotation-datepicker-panel .p-datepicker-prev .p-icon,
+.quotation-datepicker-panel .p-datepicker-next .p-icon,
+.quotation-datepicker-panel .p-datepicker-prev-icon,
+.quotation-datepicker-panel .p-datepicker-next-icon {
+    color: #000000 !important;
+
+}
+
+.quotation-datepicker-panel .pi-chevron-left::before,
+.quotation-datepicker-panel .pi-chevron-right::before {
+    color: #4b5563 !important;
+    background-color: #ffffff !important;
+
+}

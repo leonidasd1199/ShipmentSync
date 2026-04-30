@@ -1,0 +1,94 @@
+services:
+# ---------- API (NestJS - watch mode) ----------
+  api:
+    container_name: ss_api
+    build:
+      context: ./apps/api
+      dockerfile: dockerfile
+    working_dir: /node/app
+    # Root .env (path relative to this compose file — run from project root)
+    env_file: ./.env
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      MONGODB_URI: mongodb://mongo:27017/shipsync
+      # Playwright environment variables
+      PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/node/app:delegated
+      - /node/app/apps/api/node_modules
+      # Playwright browsers cache
+      - playwright_browsers:/ms-playwright
+    command: sh -c "cd apps/api && npm run start:dev"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks: [appnet]
+
+# ---------- Frontend (Vite dev server) ----------
+  frontend:
+    container_name: ss_frontend
+    image: node:22
+    working_dir: /node/app
+    environment:
+      HOST: "0.0.0.0"
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+      VITE_API_BASE: "http://localhost:3000"
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/node/app:delegated
+      - /node/app/apps/frontend/node_modules
+    command: >
+      sh -c "
+        cd apps/frontend &&
+        rm -rf node_modules package-lock.json 2>/dev/null || true &&
+        npm install &&
+        npm run dev -- --host
+      "
+    depends_on:
+      - api
+    networks: [appnet]
+
+  # ---------- MongoDB ----------
+  mongo:
+    container_name: ss_mongo
+    image: mongo:6
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: shipsync
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "localhost/shipsync", "--eval", "db.runCommand({ ping: 1 })"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [appnet]
+
+  # ---------- mongo-express ----------
+  mongo-express:
+    container_name: ss_mongo_express
+    image: mongo-express:1.0.2-20
+    restart: unless-stopped
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+    ports:
+      - "8081:8081"
+    depends_on: [mongo]
+    networks: [appnet]
+
+volumes:
+  mongo_data:
+  playwright_browsers:
+
+networks:
+  appnet:
+    driver: bridge

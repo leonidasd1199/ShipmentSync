@@ -1,0 +1,64 @@
+services:
+  api:
+    container_name: ss_api
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile.prod
+    # Root .env (path relative to this compose file — run from project root)
+    env_file: ./.env
+    environment:
+      NODE_ENV: production
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks: [appnet]
+
+
+  frontend:
+    container_name: ss_frontend
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile.prod
+      args:
+        VITE_API_BASE: "/api"
+    ports:
+      - "80:80"
+    depends_on:
+      api:
+        condition: service_started
+    networks: [appnet]
+
+  mongo:
+    container_name: ss_mongo
+    image: mongo:6
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: shipsync
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "localhost/shipsync", "--eval", "db.runCommand({ ping: 1 })"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [appnet]
+    
+  mongo-express:
+    container_name: ss_mongo_express
+    image: mongo-express:1.0.2-20
+    restart: unless-stopped
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+    ports:
+      - "8081:8081"
+    depends_on: [mongo]
+    networks: [appnet]
+
+volumes:
+  mongo_data:
+
+networks:
+  appnet:
+    driver: bridge

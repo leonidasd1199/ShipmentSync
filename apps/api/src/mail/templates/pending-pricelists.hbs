@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pending Pricelist Review</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      background-color: #ffffff;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #e0e0e0;
+      padding-bottom: 20px;
+    }
+    .header h1 {
+      color: #1a1a1a;
+      margin: 0;
+      font-size: 28px;
+    }
+    .content {
+      margin-bottom: 30px;
+    }
+    .content p {
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+    .alert-box {
+      background-color: #eff6ff;
+      border-left: 4px solid #2563eb;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .alert-box h3 {
+      margin-top: 0;
+      color: #2563eb;
+      font-size: 18px;
+    }
+    .supplier-list {
+      list-style: none;
+      padding: 0;
+      margin: 15px 0;
+    }
+    .supplier-list li {
+      padding: 8px 0;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .supplier-list li:last-child {
+      border-bottom: none;
+    }
+    .supplier-list strong {
+      color: #1a1a1a;
+    }
+    .cta-button {
+      text-align: center;
+      margin: 30px 0;
+    }
+    .cta-button a {
+      background-color: #2563eb;
+      color: white;
+      padding: 12px 24px;
+      text-decoration: none;
+      border-radius: 6px;
+      display: inline-block;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    .cta-button a:hover {
+      background-color: #1d4ed8;
+    }
+    .footer {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #e0e0e0;
+      text-align: center;
+      color: #666666;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>ShipSync</h1>
+    </div>
+    <div class="content">
+      <p>Hello {{operatorName}},</p>
+      <p>This is a weekly reminder that there are <strong>{{pendingCount}} pending pricelist{{plural}}</strong> awaiting your review and approval.</p>
+      
+      <div class="alert-box">
+        <h3>Pending by Supplier:</h3>
+        <ul class="supplier-list">
+          {{#each suppliers}}
+          <li><strong>{{name}}</strong>: {{count}} pending pricelist{{plural}}</li>
+          {{/each}}
+        </ul>
+      </div>
+
+      <p>Please review and approve or reject these pricelists at your earliest convenience.</p>
+      
+      <div class="cta-button">
+        <a href="{{reviewUrl}}">Review Pricelists</a>
+      </div>
+
+      <p style="color: #666666; font-size: 14px; margin-top: 30px;">
+        This is an automated weekly reminder. You will receive this email every Monday if there are pending pricelists.
+      </p>
+    </div>
+    <div class="footer">
+      <p>Best regards,<br>The ShipSync Team</p>
+      <p style="font-size: 12px; color: #999999; margin-top: 20px;">
+        This is an automated email. Please do not reply to this message.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

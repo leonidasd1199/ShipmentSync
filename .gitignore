@@ -1,0 +1,37 @@
+# Node
+node_modules
+npm-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist
+build
+.env
+*.local
+
+# Logs
+logs
+*.log
+
+# System files
+.DS_Store
+
+# Editor
+.vscode
+.idea
+
+# Internal docs (not for public repo)
+PROJECT.md
+
+# Claude Code local config
+.claude/
+
+# Frontend
+apps/frontend/.vite
+apps/frontend/dist
+
+# Backend
+apps/api/.turbo
+apps/api/.cache
+apps/api/coverage
+apps/api/storage/*

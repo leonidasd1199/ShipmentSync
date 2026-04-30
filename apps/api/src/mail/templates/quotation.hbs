@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estimate - ShipSync</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      background-color: #ffffff;
+      border-radius: 8px;
+      padding: 40px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #e0e0e0;
+      padding-bottom: 20px;
+    }
+    .header h1 {
+      color: #1a1a1a;
+      margin: 0;
+      font-size: 28px;
+    }
+    .greeting {
+      margin-bottom: 30px;
+      font-size: 16px;
+    }
+    .quotation-info {
+      background-color: #f8f9fa;
+      border-left: 4px solid #1a1a1a;
+      padding: 15px;
+      margin-bottom: 30px;
+      border-radius: 4px;
+    }
+    .quotation-info p {
+      margin: 5px 0;
+      font-size: 14px;
+    }
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+    }
+    .items-table th {
+      background-color: #1a1a1a;
+      color: #ffffff;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .items-table td {
+      padding: 12px;
+      border-bottom: 1px solid #e0e0e0;
+      font-size: 14px;
+    }
+    .items-table tr:last-child td {
+      border-bottom: none;
+    }
+    .items-table tr:nth-child(even) {
+      background-color: #f8f9fa;
+    }
+    .transit-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+      background-color: #e0e0e0;
+      color: #424242;
+      margin-left: 8px;
+    }
+    .total-section {
+      text-align: right;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 2px solid #1a1a1a;
+    }
+    .total-label {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-right: 20px;
+    }
+    .total-amount {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1a1a1a;
+    }
+    .validity {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 12px;
+      margin: 20px 0;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .notes {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      font-size: 14px;
+      font-style: italic;
+      color: #666666;
+    }
+    .company-signature {
+      margin-top: 40px;
+      padding-top: 30px;
+      border-top: 1px solid #e0e0e0;
+    }
+    .company-signature h3 {
+      margin: 0 0 10px 0;
+      font-size: 18px;
+      color: #1a1a1a;
+    }
+    .company-signature p {
+      margin: 5px 0;
+      font-size: 14px;
+      color: #666666;
+    }
+    .footer {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #e0e0e0;
+      text-align: center;
+      color: #666666;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Estimate</h1>
+    </div>
+    
+    <div class="greeting">
+      <p>Dear {{clientName}},</p>
+      <p>Thank you for your interest in our services. Please find below the estimate details:</p>
+    </div>
+
+    <div class="quotation-info">
+      <p><strong>Estimate ID:</strong> {{quotationId}}</p>
+      <p><strong>Date:</strong> {{quotationDate}}</p>
+    </div>
+
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th style="text-align: right;">Quantity</th>
+          <th style="text-align: right;">Unit Price</th>
+          <th style="text-align: right;">Price</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each items}}
+        <tr>
+          <td>
+            {{this.description}}
+            {{#if this.transitType}}
+            <span class="transit-badge">{{this.transitType}}</span>
+            {{/if}}
+            {{#if this.notes}}
+            <br><small style="color: #666666; font-style: italic;">{{this.notes}}</small>
+            {{/if}}
+          </td>
+          <td style="text-align: right;">
+            {{#if this.quantity}}{{this.quantity}}{{else}}1{{/if}}
+          </td>
+          <td style="text-align: right;">
+            {{#if this.formattedOriginalPrice}}${{this.formattedOriginalPrice}}{{else}}${{this.formattedPrice}}{{/if}}
+          </td>
+          <td style="text-align: right; font-weight: 600;">${{this.formattedPrice}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+
+    {{#if showTotal}}
+    <div class="total-section">
+      <span class="total-label">Total:</span>
+      <span class="total-amount">${{formattedTotal}}</span>
+    </div>
+    {{/if}}
+
+    <div class="validity">
+      <strong>Valid Until:</strong> {{validUntil}}
+    </div>
+
+    {{#if notes}}
+    <div class="notes">
+      <strong>Notes:</strong> {{notes}}
+    </div>
+    {{/if}}
+
+    <div class="company-signature">
+      <h3>{{companyName}}</h3>
+      {{#if companyEmail}}
+      <p><strong>Email:</strong> {{companyEmail}}</p>
+      {{/if}}
+      {{#if companyPhone}}
+      <p><strong>Phone:</strong> {{companyPhone}}</p>
+      {{/if}}
+      {{#if companyAddress}}
+      <p><strong>Address:</strong> {{companyAddress}}</p>
+      {{/if}}
+      {{#if companyTaxId}}
+      <p><strong>Tax ID:</strong> {{companyTaxId}}</p>
+      {{/if}}
+    </div>
+
+    <div class="footer">
+      <p>Best regards,<br>{{companyName}}</p>
+      <p style="margin-top: 15px;">
+        This is an automated estimate email. Please do not reply to this message.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+
